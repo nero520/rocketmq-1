@@ -21,6 +21,8 @@ import org.apache.rocketmq.common.message.MessageExt;
 
 /**
  * A MessageListenerConcurrently object is used to receive asynchronously delivered messages concurrently
+ *
+ * MessageListenerConcurrently对象用于同时接收异步传递的消息
  */
 public interface MessageListenerConcurrently extends MessageListener {
     /**

@@ -18,6 +18,8 @@ package org.apache.rocketmq.client.consumer.listener;
 
 /**
  * A MessageListener object is used to receive asynchronously delivered messages.
+ * MessageListener对象用于接收异步传递的消息。
+ *  主要有MessageListenerConcurrently，MessageListenerOrderly
  */
 public interface MessageListener {
 }
