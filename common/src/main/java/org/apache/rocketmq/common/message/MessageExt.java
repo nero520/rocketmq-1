@@ -65,6 +65,8 @@ public class MessageExt extends Message {
     }
 
     public static ByteBuffer socketAddress2ByteBuffer(final SocketAddress socketAddress, final ByteBuffer byteBuffer) {
+        //InetSocketAddress类主要作用是封装端口 它是在InetAddress基础上加端口，但它是有构造器的
+        //InetAddress:类的主要作用是封装IP及DNS，因为这个类没有构造器，所以我们要用他的一些方法来获得对象常用的有
         InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
         byteBuffer.put(inetSocketAddress.getAddress().getAddress(), 0, 4);
         byteBuffer.putInt(inetSocketAddress.getPort());

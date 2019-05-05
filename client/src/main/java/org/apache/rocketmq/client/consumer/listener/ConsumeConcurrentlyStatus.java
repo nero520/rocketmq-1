@@ -24,7 +24,10 @@ public enum ConsumeConcurrentlyStatus {
     CONSUME_SUCCESS,
     /**
      * Failure consumption,later try to consume
-     * 失败消费，以后重试消费
+     * 失败消费，以后重试消费；
+     * ConsumeConcurrentlyStatus.RECONSUME_LATER,
+     * 专业术语：业务方每条消息消费后要告诉MQ消费者一个结果(ack,message back)，
+     * 触发MQ消息消费重试机制，然后MQ消费者需要反馈给MQ(Broker)
      */
     RECONSUME_LATER;
 }

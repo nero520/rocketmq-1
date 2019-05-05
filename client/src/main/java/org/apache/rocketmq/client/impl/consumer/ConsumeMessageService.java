@@ -24,7 +24,7 @@ import org.apache.rocketmq.common.protocol.body.ConsumeMessageDirectlyResult;
 /**
  * 客户端消费消息service
  *
- * 有2个子类，ConsumeMessageConcurrentlyService和ConsumeMessageOrderlyService
+ * 有2个子类，非顺序消费消息机制ConsumeMessageConcurrentlyService和顺序消费消息机制ConsumeMessageOrderlyService
  *
  */
 public interface ConsumeMessageService {
