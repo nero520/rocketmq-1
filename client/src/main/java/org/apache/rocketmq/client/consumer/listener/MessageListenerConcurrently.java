@@ -29,8 +29,16 @@ public interface MessageListenerConcurrently extends MessageListener {
      * It is not recommend to throw exception,rather than returning ConsumeConcurrentlyStatus.RECONSUME_LATER if
      * consumption failure
      *
+     * 不推荐抛异常，如果消费失败，返回ConsumeConcurrentlyStatus.RECONSUME_LATER
+     *
+     * 一般使用的时候，都是实现此方法，消费消息，返回状态码
+     *
      * @param msgs msgs.size() >= 1<br> DefaultMQPushConsumer.consumeMessageBatchMaxSize=1,you can modify here
-     * @return The consume status
+     *             msgs.size()>=1<br> DefaultMQPushConsumer.consumeMessageBatchMaxSize=1,
+     *             你可以修改每次消费消息的数量，默认设置是每次消费一条,
+     *             consumeMessageBatchMaxSize 这个size是消费者注册的回调listener一次处理的消息数，默认是1.
+     *             不是每次拉取的消息数pullBatchSize（默认是32），这个不要搞混。
+     * @return The consume status 返回消息状态
      */
     ConsumeConcurrentlyStatus consumeMessage(final List<MessageExt> msgs,
         final ConsumeConcurrentlyContext context);
