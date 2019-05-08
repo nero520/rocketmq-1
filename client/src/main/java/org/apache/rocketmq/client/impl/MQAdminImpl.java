@@ -81,7 +81,7 @@ public class MQAdminImpl {
 
     /**
      *  topic创建
-     * @param key
+     * @param key 这个参数是系统已经存在的一个topic的名称，新建的topic会跟它在相同的broker上创建
      * @param newTopic 新topic
      * @param queueNum 新topic对应的读队列和写队列数量
      * @param topicSysFlag 是否系统属性， 见TopicSysFlag类

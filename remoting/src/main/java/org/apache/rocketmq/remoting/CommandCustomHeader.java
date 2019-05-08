@@ -18,6 +18,9 @@ package org.apache.rocketmq.remoting;
 
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 
+/**
+ * 自定义命令请求头信息
+ */
 public interface CommandCustomHeader {
     void checkFields() throws RemotingCommandException;
 }

@@ -252,6 +252,17 @@ public class MQClientAPIImpl {
 
     }
 
+    /**
+     * 创建topic
+     * @param addr  broker的master服务器
+     * @param defaultTopic 这个参数是系统已经存在的一个topic的名称，新建的topic会跟它在相同的broker上创建
+     * @param topicConfig 创建的topic对象配置信息
+     * @param timeoutMillis 超时时间，目前默认是6000毫秒
+     * @throws RemotingException
+     * @throws MQBrokerException
+     * @throws InterruptedException
+     * @throws MQClientException
+     */
     public void createTopic(final String addr, final String defaultTopic, final TopicConfig topicConfig,
         final long timeoutMillis)
         throws RemotingException, MQBrokerException, InterruptedException, MQClientException {

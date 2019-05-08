@@ -25,20 +25,49 @@ import org.apache.rocketmq.remoting.CommandCustomHeader;
 import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 
+/**
+ * 创建topic请求头信息
+ */
 public class CreateTopicRequestHeader implements CommandCustomHeader {
+
+    /**
+     * 主题名称
+     */
     @CFNotNull
     private String topic;
+    /**
+     * 这个参数是系统已经存在的一个topic的名称，新建的topic会跟它在相同的broker上创建
+     */
     @CFNotNull
     private String defaultTopic;
+    /**
+     * 可读队列数
+     */
     @CFNotNull
     private Integer readQueueNums;
+    /**
+     * 可写队列数
+     */
     @CFNotNull
     private Integer writeQueueNums;
+    /**
+     * topic读R、写W、执行X、权限
+     */
     @CFNotNull
     private Integer perm;
+    /**
+     * tag类型
+     * org.apache.rocketmq.common.TopicFilterType
+     */
     @CFNotNull
     private String topicFilterType;
+    /**
+     * 系统属性， 见TopicSysFlag类
+     */
     private Integer topicSysFlag;
+    /**
+     * 是否排序
+     */
     @CFNotNull
     private Boolean order = false;
 

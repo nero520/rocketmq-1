@@ -41,9 +41,13 @@ public class TopicConfig {
      */
     private int writeQueueNums = defaultWriteQueueNums;
     /**
-     * 权限
+     * 权限读、写、执行
      */
     private int perm = PermName.PERM_READ | PermName.PERM_WRITE;
+    /**
+     * tag类型
+     * org.apache.rocketmq.common.TopicFilterType
+     */
     private TopicFilterType topicFilterType = TopicFilterType.SINGLE_TAG;
     /**
      * 系统属性， 见TopicSysFlag类
