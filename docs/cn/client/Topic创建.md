@@ -1,0 +1,8 @@
+topic的创建有两种方式:
+1.一种是broker支持在收发消息时自动创建，比如producer发过来的消息带了一个不存在的topic，
+如果broker设置成可自动创建的话，会自动尝试创建topic。目前已知的consumer\producer可以自动创建，不存在时可以自动创建
+使用RocketMQ进行发消息时，必须要指定topic，对于topic的设置有一个开关autoCreateTopicEnable，
+一般在开发测试环境中会使用默认设置autoCreateTopicEnable = true，但是这样就会导致topic的设置不容易规范管理，
+没有统一的审核等等，所以在正式环境中会在Broker启动时设置参数autoCreateTopicEnable = false。
+这样当需要增加topic时就需要在web管理界面上添加即可。
+2.另外一种就是通过管理接口创建，这种方式生产环境用的更多一些，因为可以由管理员来统一管理topic。

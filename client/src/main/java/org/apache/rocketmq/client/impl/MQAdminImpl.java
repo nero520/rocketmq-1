@@ -54,6 +54,9 @@ import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.apache.rocketmq.remoting.netty.ResponseFuture;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
+/**
+ * 管理接口MQAdmin来支持用户的后台管理需求
+ */
 public class MQAdminImpl {
 
     private final InternalLogger log = ClientLogger.getLog();
@@ -76,8 +79,17 @@ public class MQAdminImpl {
         createTopic(key, newTopic, queueNum, 0);
     }
 
+    /**
+     *  topic创建
+     * @param key
+     * @param newTopic 新topic
+     * @param queueNum 新topic对应的读队列和写队列数量
+     * @param topicSysFlag 是否系统属性， 见TopicSysFlag类
+     * @throws MQClientException
+     */
     public void createTopic(String key, String newTopic, int queueNum, int topicSysFlag) throws MQClientException {
         try {
+            //1、一般使用defaultTopic获取已经存在的broker data，所有的broker默认都支持defaultTopic
             TopicRouteData topicRouteData = this.mQClientFactory.getMQClientAPIImpl().getTopicRouteInfoFromNameServer(key, timeoutMillis);
             List<BrokerData> brokerDataList = topicRouteData.getBrokerDatas();
             if (brokerDataList != null && !brokerDataList.isEmpty()) {
@@ -87,9 +99,9 @@ public class MQAdminImpl {
                 MQClientException exception = null;
 
                 StringBuilder orderTopicString = new StringBuilder();
-
+                //2、轮询所有broker，在master上创建topic，中间有一个broker失败，则中止创建
                 for (BrokerData brokerData : brokerDataList) {
-                    String addr = brokerData.getBrokerAddrs().get(MixAll.MASTER_ID);
+                    String addr = brokerData.getBrokerAddrs().get(MixAll.MASTER_ID);//broker的master服务器
                     if (addr != null) {
                         TopicConfig topicConfig = new TopicConfig(newTopic);
                         topicConfig.setReadQueueNums(queueNum);
@@ -97,7 +109,7 @@ public class MQAdminImpl {
                         topicConfig.setTopicSysFlag(topicSysFlag);
 
                         boolean createOK = false;
-                        for (int i = 0; i < 5; i++) {
+                        for (int i = 0; i < 5; i++) {//重试4次
                             try {
                                 this.mQClientFactory.getMQClientAPIImpl().createTopic(addr, key, topicConfig, timeoutMillis);
                                 createOK = true;
