@@ -18,10 +18,22 @@ package org.apache.rocketmq.common.message;
 
 import java.io.Serializable;
 
+/**
+ * 消息队列(说明同一个topic可以在不同brokerName的不同queueId)
+ */
 public class MessageQueue implements Comparable<MessageQueue>, Serializable {
     private static final long serialVersionUID = 6191200464116433425L;
+    /**
+     * 主题
+     */
     private String topic;
+    /**
+     * broker名称
+     */
     private String brokerName;
+    /**
+     * 消息队列
+     */
     private int queueId;
 
     public MessageQueue() {
@@ -97,6 +109,13 @@ public class MessageQueue implements Comparable<MessageQueue>, Serializable {
         return "MessageQueue [topic=" + topic + ", brokerName=" + brokerName + ", queueId=" + queueId + "]";
     }
 
+    /**
+     *  若topic不同,则比较topic并返回，
+     *  若topic相同,brokerName不同,则比较brokerName并返回，
+     *  若是topic相同，brokerName也相同，则比较消息队列queueId并返回
+     * @param o
+     * @return
+     */
     @Override
     public int compareTo(MessageQueue o) {
         {

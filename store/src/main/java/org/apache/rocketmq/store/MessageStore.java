@@ -228,6 +228,7 @@ public interface MessageStore {
 
     /**
      * Execute file deletion manually.
+     *  当磁盘空间不足时，执行手动删除文件
      */
     void executeDeleteFilesManually();
 

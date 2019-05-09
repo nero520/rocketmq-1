@@ -172,6 +172,9 @@ public abstract class AbstractPluginMessageStore implements MessageStore {
         return next.appendToCommitLog(startOffset, data);
     }
 
+    /**
+     * 当磁盘空间不足时，执行手动删除文件
+     */
     @Override
     public void executeDeleteFilesManually() {
         next.executeDeleteFilesManually();
