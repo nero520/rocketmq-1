@@ -95,13 +95,18 @@ public class UtilAll {
         return System.currentTimeMillis() - beginTime;
     }
 
+    /**
+     * 判断是否是某天的某几个整点时间
+     * @param when 几个时间整点，如04;08;12
+     * @return
+     */
     public static boolean isItTimeToDo(final String when) {
         String[] whiles = when.split(";");
         if (whiles.length > 0) {
             Calendar now = Calendar.getInstance();
             for (String w : whiles) {
                 int nowHour = Integer.parseInt(w);
-                if (nowHour == now.get(Calendar.HOUR_OF_DAY)) {
+                if (nowHour == now.get(Calendar.HOUR_OF_DAY)) {//Calendar.HOUR_OF_DAY是24小时制
                     return true;
                 }
             }
@@ -195,6 +200,11 @@ public class UtilAll {
             cal.get(Calendar.SECOND));
     }
 
+    /**
+     *  查询某文件所在分区已使用磁盘占该分区总磁盘空间的比率
+     * @param path 文件路径
+     * @return
+     */
     public static double getDiskPartitionSpaceUsedPercent(final String path) {
         if (null == path || path.isEmpty())
             return -1;
@@ -205,9 +215,11 @@ public class UtilAll {
             if (!file.exists())
                 return -1;
 
+            //分区总磁盘大小
             long totalSpace = file.getTotalSpace();
 
             if (totalSpace > 0) {
+                //分区可用磁盘大小
                 long freeSpace = file.getFreeSpace();
                 long usedSpace = totalSpace - freeSpace;
 

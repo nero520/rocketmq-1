@@ -99,7 +99,7 @@ public class MessageStoreConfig {
     private int cleanResourceInterval = 10000;
     // CommitLog removal interval
     /**
-     * 删除多个CommitLog文件的间隔时间（单位毫秒）
+     * 删除物理CommitLog文件的间隔, 因为在一次清除过程中, 可能需要删除的文件不止一个, 该值指定两次删除文件的间隔时间（单位毫秒）,默认100毫秒
      */
     private int deleteCommitLogFilesInterval = 100;
     // ConsumeQueue removal interval
@@ -108,7 +108,9 @@ public class MessageStoreConfig {
      */
     private int deleteConsumeQueueFilesInterval = 100;
     /**
-     * 强制删除MapedFile间隔时间（单位毫秒）
+     * 在清除过期文件时, 如果该文件被其他线程所占用(引用次数大于0, 比如读取消息), 此时会阻止此次删除任务,
+     * 同时在第一次试图删除该文件时记录当前时间戳, destroyMapedFileIntervalForcibly 表示第一次拒绝删除之后能保留的最大时间,
+     * 在此时间内, 同样可以被拒绝删除, 同时会将引用减少1000个, 超过该时间间隔后, 文件将被强制删除（单位毫秒）
      */
     private int destroyMapedFileIntervalForcibly = 1000 * 120;
     /**
@@ -117,7 +119,8 @@ public class MessageStoreConfig {
     private int redeleteHangedFileInterval = 1000 * 120;
     // When to delete,default is at 4 am
     /**
-     * 删除commitlog文件，默认为早上4点
+     * 到了删除CommitLog文件的时间点, RocketMQ通过deleteWhen设置一天的固定时间执行一次删除过期文件操作，默认为早上4点
+     * 也可以固定的某几个小时,比如04;08;10
      */
     @ImportantField
     private String deleteWhen = "04";
@@ -127,7 +130,7 @@ public class MessageStoreConfig {
     private int diskMaxUsedSpaceRatio = 75;
     // The number of hours to keep a log file before deleting it (in hours)
     /**
-     * 记录的commitlog文件，默认保存72小时（3天）
+     * CommitLog文件保留时间, 也就是从最后一次更新时间到现在, 如果超过了该时间, 则认为是过期文件, 可以被删除,默认保存72小时（3天）
      */
     @ImportantField
     private int fileReservedTime = 72;
@@ -430,6 +433,10 @@ public class MessageStoreConfig {
         this.deleteWhen = deleteWhen;
     }
 
+    /**
+     * 磁盘空间最大使用率,默认是0.75，波动区间是0.10到0.95
+     * @return
+     */
     public int getDiskMaxUsedSpaceRatio() {
         if (this.diskMaxUsedSpaceRatio < 10)
             return 10;
