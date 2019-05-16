@@ -25,18 +25,20 @@ import org.apache.rocketmq.store.stats.BrokerStatsManager;
 
 /**
  * This class defines contracting interfaces to implement, allowing third-party vendor to use customized message store.
+ * 消息存储服务启动、停止、加载数据等接口
  */
 public interface MessageStore {
 
     /**
      * Load previously stored messages.
-     *
+     * 加载历史消息
      * @return true if success; false otherwise.
      */
     boolean load();
 
     /**
      * Launch this message store.
+     * 启动消息存储服务
      *
      * @throws Exception if there is any error.
      */
@@ -44,16 +46,19 @@ public interface MessageStore {
 
     /**
      * Shutdown this message store.
+     * 关闭消息存储服务
      */
     void shutdown();
 
     /**
      * Destroy this message store. Generally, all persistent files should be removed after invocation.
+     * 销毁存储的消息.通常，调用此方法后会删除所有被持久化的消息文件
      */
     void destroy();
 
     /**
      * Store a message into store.
+     * 存储消息
      *
      * @param msg Message instance to store
      * @return result of store operation.
