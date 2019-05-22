@@ -27,20 +27,33 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Common Producer component
+ * 消息发送者实例组件
  */
 public class ProducerInstance {
 
+    /**
+     * 自定义properties的属性APPENDER_TYPE
+     */
     public static final String APPENDER_TYPE = "APPENDER_TYPE";
 
+    /**
+     * 自定义properties的属性APPENDER_TYPE对应的默认值LOG4J_APPENDER
+     */
     public static final String LOG4J_APPENDER = "LOG4J_APPENDER";
 
     public static final String LOG4J2_APPENDER = "LOG4J2_APPENDER";
 
     public static final String LOGBACK_APPENDER = "LOGBACK_APPENDER";
 
+    /**
+     * 默认分组
+     */
     public static final String DEFAULT_GROUP = "rocketmq_appender";
 
-    private ConcurrentHashMap<String, MQProducer> producerMap = new ConcurrentHashMap<String, MQProducer>();
+    /**
+     * 缓存的生产者
+     */
+    private ConcurrentHashMap</*nameServerAddress + "_" + group*/String, MQProducer> producerMap = new ConcurrentHashMap<String, MQProducer>();
 
     private static ProducerInstance instance = new ProducerInstance();
 
@@ -48,15 +61,29 @@ public class ProducerInstance {
         return instance;
     }
 
+    /**
+     *  获取组合key nameServerAddress + "_" + group
+     * @param nameServerAddress nameServer地址
+     * @param group 分组
+     * @return
+     */
     private String genKey(String nameServerAddress, String group) {
         return nameServerAddress + "_" + group;
     }
 
+    /**
+     * 得到实例化
+     * @param nameServerAddress
+     * @param group
+     * @return
+     * @throws MQClientException
+     */
     public MQProducer getInstance(String nameServerAddress, String group) throws MQClientException {
         if (StringUtils.isBlank(group)) {
             group = DEFAULT_GROUP;
         }
 
+        //1.获取
         String genKey = genKey(nameServerAddress, group);
         MQProducer p = getProducerInstance().producerMap.get(genKey);
         if (p != null) {
@@ -74,6 +101,11 @@ public class ProducerInstance {
         return defaultMQProducer;
     }
 
+    /**
+     *  移除mq消息发送者
+     * @param nameServerAddress
+     * @param group
+     */
     public void removeAndClose(String nameServerAddress, String group) {
         if (group == null) {
             group = DEFAULT_GROUP;

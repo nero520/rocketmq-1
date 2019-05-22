@@ -26,16 +26,21 @@ import org.apache.rocketmq.client.producer.MQProducer;
 
 /**
  * Log4j Appender Component
+ *
+ * log4j组件日志添加
+ *
  */
 public class RocketmqLog4jAppender extends AppenderSkeleton {
 
     /**
      * Appended message tag define
+     * 添加消息 tag
      */
     private String tag;
 
     /**
      * Whitch topic to send log messages
+     * 日志消息主题
      */
     private String topic;
 
@@ -43,16 +48,19 @@ public class RocketmqLog4jAppender extends AppenderSkeleton {
 
     /**
      * Log producer send instance
+     * 消息发送者实例
      */
     private MQProducer producer;
 
     /**
      * RocketMQ nameserver address
+     * nameserver 节点
      */
     private String nameServerAddress;
 
     /**
      * Log producer group
+     * 消息发送者分组
      */
     private String producerGroup;
 
@@ -61,10 +69,11 @@ public class RocketmqLog4jAppender extends AppenderSkeleton {
 
     public void activateOptions() {
         LogLog.debug("Getting initial context.");
-        if (!checkEntryConditions()) {
+        if (!checkEntryConditions()) {//检查日志条件是否满足
             return;
         }
         try {
+            //初始化发送者
             producer = ProducerInstance.getProducerInstance().getInstance(nameServerAddress, producerGroup);
         } catch (Exception e) {
             LogLog.error("activateOptions nameserver:" + nameServerAddress + " group:" + producerGroup + " " + e.getMessage());
@@ -73,6 +82,7 @@ public class RocketmqLog4jAppender extends AppenderSkeleton {
 
     /**
      * Info,error,warn,callback method implementation
+     * 级别为Info,error,warn,callback级别的日志添加
      */
     public void append(LoggingEvent event) {
         if (null == producer) {
@@ -87,6 +97,8 @@ public class RocketmqLog4jAppender extends AppenderSkeleton {
             msg.getProperties().put(ProducerInstance.APPENDER_TYPE, ProducerInstance.LOG4J_APPENDER);
 
             //Send message and do not wait for the ack from the message broker.
+            //单向（Oneway）发送特点为发送方只负责发送消息，不等待服务器回应且没有回调函数触发，即只发送请求不等待应答。
+            // 此方式发送消息的过程耗时非常短，一般在微秒级别。
             producer.sendOneway(msg);
         } catch (Exception e) {
             String msg = new String(data);
@@ -95,9 +107,14 @@ public class RocketmqLog4jAppender extends AppenderSkeleton {
         }
     }
 
+    /**
+     * 检查日志条件是否满足
+     * @return
+     */
     protected boolean checkEntryConditions() {
         String fail = null;
 
+        //topic和tag不能为空
         if (this.topic == null) {
             fail = "No topic";
         } else if (this.tag == null) {
@@ -114,10 +131,10 @@ public class RocketmqLog4jAppender extends AppenderSkeleton {
 
     /**
      * When system exit,this method will be called to close resources
+     * 当系统退出时，此方法会被回调来关闭资源
      */
     public synchronized void close() {
         // The synchronized modifier avoids concurrent append and close operations
-
         if (this.closed)
             return;
 
@@ -125,11 +142,13 @@ public class RocketmqLog4jAppender extends AppenderSkeleton {
         this.closed = true;
 
         try {
+            //关闭rocketmq实例
             ProducerInstance.getProducerInstance().removeAndClose(this.nameServerAddress, this.producerGroup);
         } catch (Exception e) {
             LogLog.error("Closing RocketmqLog4jAppender [" + name + "] nameServerAddress:" + nameServerAddress + " group:" + producerGroup + " " + e.getMessage());
         }
         // Help garbage collection
+        //加快GC回收
         producer = null;
     }
 

@@ -44,6 +44,14 @@ public interface MQProducer extends MQAdmin {
     void send(final Message msg, final SendCallback sendCallback, final long timeout)
         throws MQClientException, RemotingException, InterruptedException;
 
+    /**
+     * 单向（Oneway）发送特点为发送方只负责发送消息，不等待服务器回应且没有回调函数触发，
+     * 即只发送请求不等待应答。 此方式发送消息的过程耗时非常短，一般在微秒级别。
+     * @param msg
+     * @throws MQClientException
+     * @throws RemotingException
+     * @throws InterruptedException
+     */
     void sendOneway(final Message msg) throws MQClientException, RemotingException,
         InterruptedException;
 
