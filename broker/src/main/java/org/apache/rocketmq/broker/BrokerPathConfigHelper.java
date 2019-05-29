@@ -19,6 +19,9 @@ package org.apache.rocketmq.broker;
 
 import java.io.File;
 
+/**
+ * broker 文件路径帮助类
+ */
 public class BrokerPathConfigHelper {
     private static String brokerConfigPath = System.getProperty("user.home") + File.separator + "store"
         + File.separator + "config" + File.separator + "broker.properties";

@@ -32,6 +32,19 @@ public interface MessageStore {
     /**
      * Load previously stored messages.
      * 加载历史消息
+     *  1.加载延迟delayOffset.json文件
+     *  --加载config\delayOffset.json文件，若文件为空则加载config\delayOffset.json.bak文件
+     *  --设置默认等级参数(1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h 4h 6h 12h 1d 2d)
+     * 2.加载提交commitlog目录日志
+     *  --commitlog目录下所有日志信息并写，刷新，提交的。例如：00000000000000000000文件
+     * 3.加载consumequeue目录文件，消费队列
+     *  --按照topic主题和设置的队列数来加载
+     * 4.设置checkpoint文件位置信息
+     *  --index目录下的所有文件
+     *  --如果rocketmq非正常退出，则根据当前启动Checkpoint的时间和最后一次时间比较，若最后一次时间大于当前时间则直接删除该文件，否则保留文件
+     *  --然后加载到索引文件集合中
+     *  --恢复消费队列，如果是正常退出，所有的内存数据都将被刷新进行数据恢复，若非正常退出，恢复正常的数据，错误的数据则丢失
+     *  --恢复topic队列，设置commitLog对象topic消费记录。例如：{topic_1-1=250, topic_1-0=250, topic_1-3=249, topic_1-2=251}
      * @return true if success; false otherwise.
      */
     boolean load();

@@ -222,20 +222,31 @@ public class BrokerController {
         return queryThreadPoolQueue;
     }
 
+    /**
+     * 初始化和文件恢复加载等
+     * @return
+     * @throws CloneNotSupportedException
+     */
     public boolean initialize() throws CloneNotSupportedException {
+        // 加载config\topics.json文件，若文件为空则加载config\topics.json.bak文件
         boolean result = this.topicConfigManager.load();
 
+        // 加载config\consumerOffset.json文件，若文件为空则加载config\consumerOffset.json.bak文件
         result = result && this.consumerOffsetManager.load();
+        // 加载config\subscriptionGroup.json文件，若文件为空则加载config\subscriptionGroup.json.bak文件
         result = result && this.subscriptionGroupManager.load();
+        // 加载config\consumerFilter.json文件，若文件为空则加载config\consumerFilter.json.bak文件
         result = result && this.consumerFilterManager.load();
 
         if (result) {
             try {
+                // 初始化默认的DefaultMessageStore对象
                 this.messageStore =
                     new DefaultMessageStore(this.messageStoreConfig, this.brokerStatsManager, this.messageArrivingListener,
                         this.brokerConfig);
                 this.brokerStats = new BrokerStats((DefaultMessageStore) this.messageStore);
                 //load plugin
+                //加载插件，此处默认为空
                 MessageStorePluginContext context = new MessageStorePluginContext(messageStoreConfig, brokerStatsManager, messageArrivingListener, brokerConfig);
                 this.messageStore = MessageStoreFactory.build(context, this.messageStore);
                 this.messageStore.getDispatcherList().addFirst(new CommitLogDispatcherCalcBitMap(this.brokerConfig, this.consumerFilterManager));
@@ -245,13 +256,28 @@ public class BrokerController {
             }
         }
 
+        // 1.加载延迟delayOffset.json文件
+        // --加载config\delayOffset.json文件，若文件为空则加载config\delayOffset.json.bak文件
+        // --设置默认等级参数(1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h 4h 6h 12h 1d 2d)
+        // 2.加载提交commitlog目录日志
+        // --commitlog目录下所有日志信息并写，刷新，提交的。例如：00000000000000000000文件
+        // 3.加载consumequeue目录文件，消费队列
+        // --按照topic主题和设置的队列数来加载
+        // 4.设置checkpoint文件位置信息
+        // --index目录下的所有文件
+        // --如果rocketmq非正常退出，则根据当前启动Checkpoint的时间和最后一次时间比较，若最后一次时间大于当前时间则直接删除该文件，否则保留文件
+        // --然后加载到索引文件集合中
+        // --恢复消费队列，如果是正常退出，所有的内存数据都将被刷新进行数据恢复，若非正常退出，恢复正常的数据，错误的数据则丢失
+        // --恢复topic队列，设置commitLog对象topic消费记录。例如：{topic_1-1=250, topic_1-0=250, topic_1-3=249, topic_1-2=251}
         result = result && this.messageStore.load();
 
         if (result) {
             this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.clientHousekeepingService);
             NettyServerConfig fastConfig = (NettyServerConfig) this.nettyServerConfig.clone();
+            // 设置netty远程通讯服务，端口为10909
             fastConfig.setListenPort(nettyServerConfig.getListenPort() - 2);
             this.fastRemotingServer = new NettyRemotingServer(fastConfig, this.clientHousekeepingService);
+            // 发送消息自定义线程池
             this.sendMessageExecutor = new BrokerFixedThreadPoolExecutor(
                 this.brokerConfig.getSendMessageThreadPoolNums(),
                 this.brokerConfig.getSendMessageThreadPoolNums(),
@@ -260,6 +286,7 @@ public class BrokerController {
                 this.sendThreadPoolQueue,
                 new ThreadFactoryImpl("SendMessageThread_"));
 
+            // 拉取消息自定义线程池
             this.pullMessageExecutor = new BrokerFixedThreadPoolExecutor(
                 this.brokerConfig.getPullMessageThreadPoolNums(),
                 this.brokerConfig.getPullMessageThreadPoolNums(),
@@ -268,6 +295,7 @@ public class BrokerController {
                 this.pullThreadPoolQueue,
                 new ThreadFactoryImpl("PullMessageThread_"));
 
+            // 查询消息自定义线程池
             this.queryMessageExecutor = new BrokerFixedThreadPoolExecutor(
                 this.brokerConfig.getQueryMessageThreadPoolNums(),
                 this.brokerConfig.getQueryMessageThreadPoolNums(),
@@ -276,10 +304,12 @@ public class BrokerController {
                 this.queryThreadPoolQueue,
                 new ThreadFactoryImpl("QueryMessageThread_"));
 
+            // 管理员Broker自定义线程池
             this.adminBrokerExecutor =
                 Executors.newFixedThreadPool(this.brokerConfig.getAdminBrokerThreadPoolNums(), new ThreadFactoryImpl(
                     "AdminBrokerThread_"));
 
+            // 客户端管理自定义线程池
             this.clientManageExecutor = new ThreadPoolExecutor(
                 this.brokerConfig.getClientManageThreadPoolNums(),
                 this.brokerConfig.getClientManageThreadPoolNums(),
@@ -304,10 +334,12 @@ public class BrokerController {
                 this.endTransactionThreadPoolQueue,
                 new ThreadFactoryImpl("EndTransactionThread_"));
 
+            // 消息管理自定义线程池
             this.consumerManageExecutor =
                 Executors.newFixedThreadPool(this.brokerConfig.getConsumerManageThreadPoolNums(), new ThreadFactoryImpl(
                     "ConsumerManageThread_"));
 
+            // 注册消息处理器
             this.registerProcessor();
 
             final long initialDelay = UtilAll.computNextMorningTimeMillis() - System.currentTimeMillis();

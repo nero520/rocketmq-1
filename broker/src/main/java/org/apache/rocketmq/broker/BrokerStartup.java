@@ -48,12 +48,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_ENABLE;
 
+/**
+ * broker启动服务入口类
+ */
 public class BrokerStartup {
     public static Properties properties = null;
     public static CommandLine commandLine = null;
     public static String configFile = null;
     public static InternalLogger log;
 
+    /**
+     * broker启动服务总入口
+     * @param args
+     */
     public static void main(String[] args) {
         start(createBrokerController(args));
     }
@@ -87,9 +94,16 @@ public class BrokerStartup {
         }
     }
 
+    /**
+     * 启动时创建一个Broker服务
+     * @param args
+     * @return
+     */
     public static BrokerController createBrokerController(String[] args) {
+        // 设置rocketmq.remoting.version变量到系统
         System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
 
+        // 检查netty远程通讯缓冲大小配置并初始化
         if (null == System.getProperty(NettySystemConfig.COM_ROCKETMQ_REMOTING_SOCKET_SNDBUF_SIZE)) {
             NettySystemConfig.socketSndbufSize = 131072;
         }
@@ -100,6 +114,7 @@ public class BrokerStartup {
 
         try {
             //PackageConflictDetect.detectFastjson();
+            //创建命令行参数：如help, mqbroker等命令，设置namesrvAddr-->n, h-->help等后续会用到
             Options options = ServerUtil.buildCommandlineOptions(new Options());
             commandLine = ServerUtil.parseCmdLine("mqbroker", args, buildCommandlineOptions(options),
                 new PosixParser());
@@ -107,28 +122,37 @@ public class BrokerStartup {
                 System.exit(-1);
             }
 
+            // 初始化Broker配置
             final BrokerConfig brokerConfig = new BrokerConfig();
+            // 初始化netty客户端和服务器配置
             final NettyServerConfig nettyServerConfig = new NettyServerConfig();
             final NettyClientConfig nettyClientConfig = new NettyClientConfig();
 
             nettyClientConfig.setUseTLS(Boolean.parseBoolean(System.getProperty(TLS_ENABLE,
                 String.valueOf(TlsSystemConfig.tlsMode == TlsMode.ENFORCING))));
             nettyServerConfig.setListenPort(10911);
+            // 初始化消息存储位置和rocket所有启动broker的加载的properties配置信息
             final MessageStoreConfig messageStoreConfig = new MessageStoreConfig();
 
+            // 默认初始化是为异步复制
             if (BrokerRole.SLAVE == messageStoreConfig.getBrokerRole()) {
+                //命中消息在内存的最大比例,默认是40，不设置就为30
                 int ratio = messageStoreConfig.getAccessMessageInMemoryMaxRatio() - 10;
                 messageStoreConfig.setAccessMessageInMemoryMaxRatio(ratio);
             }
 
+            // 启动时设置了 例如 -c /conf/2m-2s-sync/broker-a.properties文件加载目录
             if (commandLine.hasOption('c')) {
                 String file = commandLine.getOptionValue('c');
                 if (file != null) {
+                    // broker-a.properties文件
                     configFile = file;
                     InputStream in = new BufferedInputStream(new FileInputStream(file));
+                    // 加载文件到属性集合中
                     properties = new Properties();
                     properties.load(in);
 
+                    // 设置配置对象值
                     properties2SystemEnv(properties);
                     MixAll.properties2Object(properties, brokerConfig);
                     MixAll.properties2Object(properties, nettyServerConfig);
@@ -140,8 +164,10 @@ public class BrokerStartup {
                 }
             }
 
+            // 将nameSrv和file路径设置到BrokerConfig对象中
             MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), brokerConfig);
 
+            // rocketmqHome为空则退出程序
             if (null == brokerConfig.getRocketmqHome()) {
                 System.out.printf("Please set the %s variable in your environment to match the location of the RocketMQ installation", MixAll.ROCKETMQ_HOME_ENV);
                 System.exit(-2);
@@ -178,7 +204,9 @@ public class BrokerStartup {
                     break;
             }
 
+            // 设置HA监听端口10912
             messageStoreConfig.setHaListenPort(nettyServerConfig.getListenPort() + 1);
+            // 设置日志工厂对象，主要用于Logger实例化
             LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
             JoranConfigurator configurator = new JoranConfigurator();
             configurator.setContext(lc);
@@ -207,14 +235,17 @@ public class BrokerStartup {
             MixAll.printObjectProperties(log, nettyClientConfig);
             MixAll.printObjectProperties(log, messageStoreConfig);
 
+            // 创建并初始化BrokerController对象
             final BrokerController controller = new BrokerController(
                 brokerConfig,
                 nettyServerConfig,
                 nettyClientConfig,
                 messageStoreConfig);
             // remember all configs to prevent discard
+            // 合并当前所有配置信息防止后续丢失
             controller.getConfiguration().registerConfig(properties);
 
+            // 初始化加载本地store等系统索引，消费等文件
             boolean initResult = controller.initialize();
             if (!initResult) {
                 controller.shutdown();
