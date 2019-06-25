@@ -56,6 +56,13 @@ public class MessageDecoder {
         + 4 // 13 RECONSUMETIMES
         + 8; // 14 Prepared Transaction Offset
 
+    /**
+     * broker端生成的offsetMsgId就比较简单了，直接就是主机ip + 物理分区的offset，再调用UtilAll.bytes2string进行移位转码就完成了
+     * @param input
+     * @param addr
+     * @param offset
+     * @return
+     */
     public static String createMessageId(final ByteBuffer input, final ByteBuffer addr, final long offset) {
         input.flip();
         input.limit(MessageDecoder.MSG_ID_LENGTH);
@@ -348,6 +355,7 @@ public class MessageDecoder {
             }
 
             ByteBuffer byteBufferMsgId = ByteBuffer.allocate(MSG_ID_LENGTH);
+            //broker端生成的offsetMsgId就比较简单了，直接就是主机ip + 物理分区的offset，再调用UtilAll.bytes2string进行移位转码就完成了
             String msgId = createMessageId(byteBufferMsgId, msgExt.getStoreHostBytes(), msgExt.getCommitLogOffset());
             msgExt.setMsgId(msgId);
 

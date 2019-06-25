@@ -30,6 +30,7 @@ public class MessageClientIDSetter {
     private static long startTime;
     private static long nextStartTime;
 
+    //初始化参数LEN,FIX_STRING,COUNTER
     static {
         LEN = 4 + 2 + 4 + 4 + 2;
         ByteBuffer tempBuffer = ByteBuffer.allocate(10);
@@ -48,6 +49,10 @@ public class MessageClientIDSetter {
         COUNTER = new AtomicInteger(0);
     }
 
+    /**
+     * 设置开始时间
+     * @param millis
+     */
     private synchronized static void setStartTime(long millis) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(millis);
@@ -99,13 +104,38 @@ public class MessageClientIDSetter {
         return result;
     }
 
+    /**
+     * 最终生成msgId
+     *
+     * msgId的生成因子是: ip + 进程pid + MessageClientIDSetter.class.getClassLoader().hashCode() + time + counter(AtomicInteger自增变量）
+     * 最后调用bytes2string进行十六进制的移位和编码就产生了我们的msgId
+     *
+     * 每个producer实例来说ip都是唯一的，所以不同producer生成的msgId是不会重复的
+     * 对于producer单个实例来说的区分因子是：time + counter
+     * 首先应用不重启的情况下msgId是保证唯一性的，应用重启了只要系统的时钟不变msgId也是唯一的
+     *
+     * 所以只要系统的时钟不回拨我们就可以保证msgId的全局唯一
+     *
+     * 有人也许会说应用运行了一个月再进行重启msgId就会重复了。从生成算法上来说是的！但是MQ的message是有时效性的，有效期是72小时也就是3天。
+     *
+     * 每天的凌晨4点rocketMQ会把过期的message清除掉。所以msgId也是保证全局唯一的。
+     *
+     * @return
+     */
     public static String createUniqID() {
+        //msgId的长度是LEN * 2 = 16 * 2 = 32
         StringBuilder sb = new StringBuilder(LEN * 2);
+        //FIX_STRING = ip + 进程pid + MessageClientIDSetter.class.getClassLoader().hashCode()
         sb.append(FIX_STRING);
+        //createUniqIDBuffer 加入time 和 counter 因子
         sb.append(UtilAll.bytes2string(createUniqIDBuffer()));
         return sb.toString();
     }
 
+    /**
+     * 初始化buffer createUniqIDBuffer 加入time 和 counter 因子
+     * @return
+     */
     private static byte[] createUniqIDBuffer() {
         ByteBuffer buffer = ByteBuffer.allocate(4 + 2);
         long current = System.currentTimeMillis();
