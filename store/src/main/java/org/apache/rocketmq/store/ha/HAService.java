@@ -42,6 +42,10 @@ import org.apache.rocketmq.store.DefaultMessageStore;
 
 /**
  * 主从同步核心实现类
+ * RocketMQ HA机制大体可以分为
+ * 1）Master启动并监听Slave的连接请求。
+ * 2）Slave启动，与Master建立链接。
+ * 3）Slave发送待拉取偏移量待Master返回数据，持续该过程。
  */
 public class HAService {
     private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
@@ -133,9 +137,16 @@ public class HAService {
     // this.groupTransferService.notifyTransferSome();
     // }
 
+    /**
+     * Master启动流程（HAService）
+     * @throws Exception
+     */
     public void start() throws Exception {
+        //建立HA服务端监听服务，处理客户Slave客户端监听请求
         this.acceptSocketService.beginAccept();
+        //启动AcceptSocketService，处理监听逻辑
         this.acceptSocketService.start();
+        //启动GroupTransferService线程
         this.groupTransferService.start();
         this.haClient.start();
     }
@@ -196,7 +207,7 @@ public class HAService {
 
         /**
          * Starts listening to slave connections.
-         *
+         *  建立HA服务端监听服务，处理客户Slave客户端监听请求
          * @throws Exception If fails.
          */
         public void beginAccept() throws Exception {
